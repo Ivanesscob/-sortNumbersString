@@ -1,7 +1,12 @@
 
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,7 +14,8 @@ import java.util.List;
 public class App {
     
     private static boolean addWrite = false;
-    private static String pathString = "./";
+    private static boolean needStatistics = false;
+    private static String pathString = "";
     // false - s    true - f
     private static boolean choosenStat = false;
 
@@ -19,18 +25,17 @@ public class App {
     private static int quantString = 0;
 
     // full Statistics
-    private static int maxInteger; 
-    private static int minInteger;
-    private static int avgInteger;
-    private static int sumInteger;
+    private static Long maxInteger; 
+    private static Long minInteger;
+    private static int sumInteger = 0;
 
-    private static int maxFloat; 
-    private static int minFloat;
-    private static int avgFloat;
-    private static int sumFloat;
+    private static Double maxFloat;
+    private static Double minFloat;
+    private static int sumFloat = 0;
 
     private static int maxSizeString;
     private static int minSizeString;
+    
 
     //Name
     private static String integerFileName = "integers.txt";
@@ -40,8 +45,8 @@ public class App {
     private static List<String> fileList = new LinkedList<>();
 
     //Lists of elements
-    private static List<String> intList = new LinkedList<>();
-    private static List<String> floatList = new LinkedList<>();
+    private static List<Long> intList = new LinkedList<>();
+    private static List<Double> floatList = new LinkedList<>();
     private static List<String> stringList = new LinkedList<>();
 
     public static void main(String[] args) {    
@@ -54,8 +59,10 @@ public class App {
 
                         if (Character.isDigit(firstChar)) {
                             System.out.println("Первый символ в назавнии файла не может быть числом.");
+                            return;
                         } else if (!isValidChar(firstChar)) {
                             System.out.println("Первый символ в назавнии файла содержит недопустимые символы для имени файла.");
+                            return;
                         } 
                         else{
                             integerFileName = args[Arrays.asList(args).indexOf("-p") + 1] + integerFileName;
@@ -67,21 +74,23 @@ public class App {
                         System.out.println("Неизвестная ошибка!");
                     }
                 }
-                case "-s" -> choosenStat = false;
-                case "-f" -> choosenStat = true;
+                case "-s" -> {choosenStat = false; needStatistics = true;}
+                case "-f" -> {choosenStat = true;needStatistics = true;}
                 case "-o" -> {
                     try {
                         
                         
-                        char firstChar = args[Arrays.asList(args).indexOf("-p") + 1].charAt(0);
+                        char firstChar = args[Arrays.asList(args).indexOf("-o") + 1].charAt(0);
                         
                         if (Character.isDigit(firstChar)) {
                             System.out.println("Первый символ в назавнии пути не может быть числом.");
+                            return;
                         } else if (!isValidChar(firstChar)) {
                             System.out.println("Первый символ в назавнии пути содержит недопустимые символы для имени файла.");
+                            return;
                         }
                         else{
-                            pathString = pathString + args[Arrays.asList(args).indexOf("-p") + 1];
+                            pathString = pathString + args[Arrays.asList(args).indexOf("-o") + 1];
                         }
                     } catch (Exception e) {
                         System.out.println("Неизвестная ошибка!");
@@ -97,8 +106,71 @@ public class App {
         for (String string : fileList) {
             listSorter(string);
         }
+        try {
+            String longest = "";
+        String shortes = stringList.get(0);
+        for (String word : stringList) {
+            if (word.length() > longest.length()) {
+                longest = word;
+            }
+            else if (word.length() < shortes.length()) {
+                shortes = word;
+            }
+        }
+        maxSizeString = longest.length();
+        minSizeString = shortes.length();
+        maxInteger = Collections.max(intList);
+        minInteger = Collections.min(intList);
+        maxFloat = Collections.max(floatList);
+        minFloat = Collections.min(floatList);
+        } catch (Exception e) {
+        }
         
 
+
+        try {
+            if(!(pathString.lastIndexOf('/') == pathString.length()-1)){
+                pathString += "/";
+            }
+            File directory = new File(pathString);
+            directory.mkdirs();
+            File fileCreate;
+            if(quantInteger != 0){
+                
+                fileCreate = new File(pathString+integerFileName);
+                fileCreate.createNewFile();
+                printInFile(pathString+integerFileName, intList);
+                if(needStatistics){
+                    printStatistics("целых чисел", quantInteger, (double)sumInteger, maxInteger,minInteger);
+                }
+                
+            }
+            if(quantFloat != 0){
+                fileCreate = new File(pathString+floatsFileName);
+                fileCreate.createNewFile();
+                printInFile(pathString+floatsFileName, floatList);
+                if(needStatistics){
+                    printStatistics("дробных чисел", quantFloat, (double)sumFloat,maxFloat, minFloat);
+                }
+            }
+            if(quantString != 0){
+                fileCreate = new File(pathString+stringsFileName);
+                fileCreate.createNewFile();
+                printInFile(pathString+stringsFileName, stringList);
+                if(needStatistics){
+                    printStatistics();
+                }
+                
+            }
+            
+            
+        } catch (Exception e) {
+            System.out.println("Невозможно создать файлы");
+        }
+
+        
+        
+        
         
     }
     private static void listSorter(String fileName){
@@ -107,17 +179,16 @@ public class App {
             String line;
             while ((line = reader.readLine()) != null) {
             try {
-
-                Long.parseLong(line);
-                intList.add(line);
+                intList.add(Long.parseLong(line));
+                //statistic
                 quantInteger++;
+                sumInteger += Long.parseLong(line);
 
             } catch (Exception e) {
                 try {
-
-                Double.parseDouble(line);
-                floatList.add(line);
+                floatList.add(Double.parseDouble(line));
                 quantFloat++;
+                sumFloat +=Double.parseDouble(line);
 
                 } catch (Exception ex) {
                     try {
@@ -126,7 +197,7 @@ public class App {
                         quantString++;
 
                     } catch (Exception exc) {
-                        System.out.println("Неизвестная ошибка");
+                        System.out.println("Ошибка синтаксиса вызова программы");
                     } 
                 }
             }
@@ -138,9 +209,48 @@ public class App {
 
     }
 
+    private static void printStatistics(){
+        System.out.println("\n");
+        System.out.println("Статистика записи строк: \n");
+        System.out.println("Всего строк: " + quantString);
+        if(choosenStat){
+            System.out.println("Максимальное количество букв: " + maxSizeString);
+        System.out.println("Минимальное количество букв: " + minSizeString);
+        }
+        
+    }
+
+    private static <T> void  printStatistics(String item, int quantity, Double sum, T maxItem, T minItem){
+        System.out.println("\n");
+            System.out.println("Статистика записи " + item+":\n");
+            System.out.println("Всего чисел: " + quantity);
+        if (choosenStat){
+            
+            System.out.println("Сумма элементов: "+  sum);
+            System.out.println("Максимальны элемент: " + maxItem);
+            System.out.println("Минимальный элемент: " + minItem);
+            double avgItem = sum/quantity;
+            System.out.println("Среднее значение: " + avgItem);
+        }
+        
+    }
+
+    private static void printInFile(String filePath,List<?> stringList){
+        try (FileWriter writer = new FileWriter(filePath, addWrite)) {
+            for (Object string : stringList) {
+                writer.write(string.toString()  + System.lineSeparator());
+            }
+            writer.close();
+            
+        } catch (IOException e) {
+            System.out.println("Ошибка при записи в файл.");
+        }
+        
+    }
+
 
     private static boolean isValidChar(char c) {
-        char[] invalidChars = {'\\', '/', ':', '*', '?', '"', '<', '>', '|', '-'};
+        char[] invalidChars = { '\\', ':', '*', '?', '"', '<', '>', '|', '-'};
         
         for (char invalidChar : invalidChars) {
             if (c == invalidChar) {
@@ -149,6 +259,4 @@ public class App {
         }
         return true;
     }
-    
-    
 }
