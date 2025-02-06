@@ -1,5 +1,3 @@
-
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -214,8 +212,8 @@ public class App {
         System.out.println("Статистика записи строк: \n");
         System.out.println("Всего строк: " + quantString);
         if(choosenStat){
-            System.out.println("Максимальное количество букв: " + maxSizeString);
-        System.out.println("Минимальное количество букв: " + minSizeString);
+            System.out.println("Максимальное количество символов: " + maxSizeString);
+        System.out.println("Минимальное количество символов: " + minSizeString);
         }
         
     }
@@ -250,7 +248,7 @@ public class App {
 
 
     private static boolean isValidChar(char c) {
-        char[] invalidChars = { '\\', ':', '*', '?', '"', '<', '>', '|', '-'};
+        char[] invalidChars = { '\\', ':', '*', '?', '"', '<', '>', '|', '-', '.', '_' };
         
         for (char invalidChar : invalidChars) {
             if (c == invalidChar) {
